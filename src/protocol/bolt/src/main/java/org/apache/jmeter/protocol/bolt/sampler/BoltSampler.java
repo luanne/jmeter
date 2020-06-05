@@ -39,6 +39,7 @@ import org.neo4j.driver.Driver;
 import org.neo4j.driver.Record;
 import org.neo4j.driver.Result;
 import org.neo4j.driver.Session;
+import org.neo4j.driver.SessionConfig;
 import org.neo4j.driver.exceptions.Neo4jException;
 import org.neo4j.driver.summary.ResultSummary;
 
@@ -82,7 +83,8 @@ public class BoltSampler extends AbstractBoltTestElement implements Sampler, Tes
 
         try {
             res.setResponseHeaders("Cypher request: " + getCypher());
-            res.setResponseData(execute(BoltConnectionElement.getDriver(), getCypher(), params), StandardCharsets.UTF_8.name());
+            res.setResponseData(execute(BoltConnectionElement.getDriver(), BoltConnectionElement.getDatabaseName(),
+                    getCypher(), params), StandardCharsets.UTF_8.name());
         } catch (Exception ex) {
             res = handleException(res, ex);
         } finally {
@@ -100,8 +102,8 @@ public class BoltSampler extends AbstractBoltTestElement implements Sampler, Tes
         return APPLICABLE_CONFIG_CLASSES.contains(guiClass);
     }
 
-    private String execute(Driver driver, String cypher, Map<String, Object> params) {
-        try (Session session = driver.session()) {
+    private String execute(Driver driver, String database, String cypher, Map<String, Object> params) {
+        try (Session session = driver.session(SessionConfig.forDatabase(database))) {
             Result statementResult = session.run(cypher, params);
             return response(statementResult);
         }
